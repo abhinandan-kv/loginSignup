@@ -1,0 +1,178 @@
+import React, { useState } from "react";
+import axios from "axios";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import axiosInstance from "../../utils/AxiosApi/AxiosInstance";
+import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
+
+const SignUp = () => {
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [emailForOtp, setEmailForOtp] = useState("");
+  const [otp, setOtp] = useState(undefined);
+
+  const navigate = useNavigate();
+
+  async function handleClick() {
+    const res = await axiosInstance.post("/user/verifyotp", { email: emailForOtp, otp });
+    if (res.status === 200) {
+      navigate({ to: "/signin" });
+    }
+  }
+
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+    validationSchema: Yup.object({
+      name: Yup.string().required("Name is required"),
+      email: Yup.string().email("Invalid email address").required("Email is required"),
+      password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        console.log("values- ", values);
+        const res = await axiosInstance.post("/user/signup", values);
+        console.log(res)
+        if (res.status === 201) {
+          setEmailForOtp(values.email);
+          setShowOtpModal(true);
+        }
+        if (res.status === 200) {
+          console.log(res.data.message);
+          toast(res.data.message);
+        }
+      } catch (error) {
+        console.error("Signup failed:", error);
+        toast("Signup failed. Please try again.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
+  return (
+    <section className="min-h-screen bg-gray-50 flex items-center justify-center py-8 px-4">
+      <div className="flex flex-col items-center justify-center w-full">
+        <a href="#" className="flex items-center mb-6 text-2xl font-semibold text-gray-900">
+          <LogoIcon />
+          ExpressWay
+        </a>
+
+        <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200">
+          <div className="p-6 space-y-6 sm:p-8">
+            <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">Sign up to your account</h1>
+
+            <form className="space-y-4 md:space-y-6" onSubmit={formik.handleSubmit}>
+              <div>
+                <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900">
+                  Your Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  id="name"
+                  className={`bg-gray-50 border ${
+                    formik.touched.name && formik.errors.name ? "border-red-500" : "border-gray-300"
+                  } text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                  placeholder="yourgoodname"
+                  {...formik.getFieldProps("name")}
+                />
+                {formik.touched.name && formik.errors.name ? <p className="text-red-500 text-sm mt-1">{formik.errors.name}</p> : null}
+              </div>
+              <div>
+                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900">
+                  Your email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  className={`bg-gray-50 border ${
+                    formik.touched.email && formik.errors.email ? "border-red-500" : "border-gray-300"
+                  } text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                  placeholder="name@company.com"
+                  {...formik.getFieldProps("email")}
+                />
+                {formik.touched.email && formik.errors.email ? <p className="text-red-500 text-sm mt-1">{formik.errors.email}</p> : null}
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  id="password"
+                  className={`bg-gray-50 border ${
+                    formik.touched.password && formik.errors.password ? "border-red-500" : "border-gray-300"
+                  } text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                  placeholder="••••••••"
+                  {...formik.getFieldProps("password")}
+                />
+                {formik.touched.password && formik.errors.password ? <p className="text-red-500 text-sm mt-1">{formik.errors.password}</p> : null}
+              </div>
+
+              <div className="flex items-center justify-end">
+                <a
+                  href="#"
+                  className="text-sm font-medium text-blue-600 hover:underline transition duration-150"
+                  onClick={() => navigate({ to: "/signin" })}
+                >
+                  Login
+                </a>
+              </div>
+
+              <button
+                type="submit"
+                disabled={formik.isSubmitting}
+                className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none 
+                           focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition duration-150"
+              >
+                {formik.isSubmitting ? "Signing up..." : "Sign up"}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {showOtpModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-100 bg-opacity-40 z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm text-center space-y-4">
+            <h2 className="text-xl font-semibold">Enter OTP</h2>
+            <p className="text-gray-500 text-sm">
+              We've sent an OTP to <span className="font-medium">{emailForOtp}</span>
+            </p>
+            <input
+              type="text"
+              maxLength="6"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-2 text-center text-lg focus:ring-blue-500 focus:border-blue-500"
+            />
+            <div className="flex justify-center space-x-3 mt-4">
+              <button onClick={() => setShowOtpModal(false)} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition">
+                Cancel
+              </button>
+              <button onClick={handleClick} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
+                Verify
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
+
+export default SignUp;
+
+const LogoIcon = () => (
+  <svg className="w-8 h-8 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+  </svg>
+);
