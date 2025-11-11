@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useUserStore } from "./useUserStore";
+import { useUserStore } from "../Store/useUserStore";
 import { useEffect } from "react";
 
 export function useAuth() {

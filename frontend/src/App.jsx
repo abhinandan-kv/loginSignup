@@ -5,7 +5,7 @@ import "./App.css";
 import SignUp from "./Pages/Auth/SignUp";
 import { toast, Toaster } from "sonner";
 import RouterProviderWrapper from "./Router/router";
-import { useUserStore } from "./CustomHook/useUserStore";
+import { useUserStore } from "./Store/useUserStore";
 
 function App({ children }) {
   const user = useUserStore((state) => state.user);

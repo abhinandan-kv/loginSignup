@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Calendar, Home, InboxIcon, Search, Settings } from "lucide-react";
 import { NavUser } from "./ui/nav-user";
-import { useUserStore } from "@/CustomHook/useUserStore";
+import { useUserStore } from "@/Store/useUserStore";
 import avatar from "../assets/124599.jpg";
 
 export function AppSidebar() {

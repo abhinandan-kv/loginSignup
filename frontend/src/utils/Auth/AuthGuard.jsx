@@ -1,4 +1,4 @@
-import { useUserStore } from "@/CustomHook/useUserStore";
+import { useUserStore } from "@/Store/useUserStore";
 
 export async function requireAuth() {
   const store = useUserStore.getState();

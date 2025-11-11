@@ -4,7 +4,7 @@ import SignUp from "../Pages/Auth/SignUp";
 import SignIn from "../Pages/Auth/SignIn";
 import Dashboard from "../Pages/Dashboard/Dashboard";
 import { isAuthenticated } from "@/utils/Auth/Auth";
-import { useUserStore } from "@/CustomHook/useUserStore";
+import { useUserStore } from "@/Store/useUserStore";
 import { requireAuth } from "@/utils/Router/ProtectedRouteHelpers";
 
 const rootRoute = createRootRoute({

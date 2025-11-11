@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { decryptData, getDecryptedItem } from "../../utils/Encryption/EncryptDecrypt";
 import NormalLayout from "@/Layout/NormalLayout";
 import DashboardArea from "@/Components/DashboardArea";
-import { useUserStore } from "@/CustomHook/useUserStore";
+import { useUserStore } from "@/Store/useUserStore";
 
 const Dashboard = () => {
   const user = useUserStore((state) => state.user);

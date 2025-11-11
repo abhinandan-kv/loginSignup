@@ -5,7 +5,7 @@ import { useNavigate } from "@tanstack/react-router";
 import axiosInstance from "../../utils/AxiosApi/AxiosInstance";
 import { toast } from "sonner";
 import { decryptData, encryptData, setEncryptedItem } from "../../utils/Encryption/EncryptDecrypt";
-import { useUserStore } from "@/CustomHook/useUserStore";
+import { useUserStore } from "@/Store/useUserStore";
 
 const LogoIcon = () => (
   <svg className="w-8 h-8 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
