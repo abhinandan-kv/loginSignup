@@ -3,6 +3,7 @@ import { getDecryptedItem, setEncryptedItem } from "@/utils/Encryption/EncryptDe
 import { create } from "zustand";
 
 let idleTimer = null;
+let refreshInterval = null;
 
 export const useUserStore = create((set, get) => ({
   user: null,
@@ -27,7 +28,7 @@ export const useUserStore = create((set, get) => ({
   logout: () => {
     set({ user: null });
     localStorage.removeItem("userdata");
-    localStorage.removeItem('otpData')
+    localStorage.removeItem("otpData");
     clearTimeout(idleTimer);
   },
 
@@ -50,7 +51,28 @@ export const useUserStore = create((set, get) => ({
       get().logout();
       // custom event for autoLogout
       window.dispatchEvent(new CustomEvent("autoLogout"));
-    }, sessionTimer); 
+    }, sessionTimer);
+  },
+
+  //refresh token server side
+  startRefreshLoop: () => {
+    clearInterval(refreshInterval);
+    const REFRESH_INTERVAL = 10 * 60 * 1000;
+    refreshInterval = setInterval(async () => {
+      const user = get().user;
+      if (!user) return;
+      try {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          const updatedUser = { ...user, token: newToken };
+          set({ user: updatedUser });
+          setEncryptedItem("userdata", updatedUser);
+        }
+      } catch (error) {
+        console.warn("Token refresh failed -> logging out");
+        get().logout;
+      }
+    }, REFRESH_INTERVAL);
   },
 
   isAuthenticatedd: () => !!get().user,

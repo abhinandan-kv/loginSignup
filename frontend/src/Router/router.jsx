@@ -26,7 +26,7 @@ const otpRoute = createRoute({
 export const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dashboard",
-  beforeLoad: requireAuth,
+  // beforeLoad: requireAuth,
   component: Dashboard,
 });
 

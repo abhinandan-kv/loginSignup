@@ -7,6 +7,7 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 axiosInstance.interceptors.request.use((config) => {
@@ -23,5 +24,21 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+//to ensure the autorefresh accesstokens
+axiosInstance.interceptors.response.use(
+  (res) => res,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const refreshToken = await getDecryptedItem("refreshToken");
+      const { data } = await axiosInstance.post("/user/refresh", { refreshToken });
+      await setEncryptedItem("accessToken", data.accessToken);
+      originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+      return axiosInstance(originalRequest);
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;
-  

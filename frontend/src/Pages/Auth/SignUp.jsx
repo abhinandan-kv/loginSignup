@@ -35,8 +35,9 @@ const SignUp = () => {
       try {
         console.log("values- ", values);
         const res = await axiosInstance.post("/user/signup", values);
-        console.log(res)
+        console.log(res);
         if (res.status === 201) {
+          toast(res.data.message);
           setEmailForOtp(values.email);
           setShowOtpModal(true);
         }

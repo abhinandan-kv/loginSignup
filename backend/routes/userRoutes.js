@@ -1,5 +1,16 @@
 import { Router } from "express";
-import { getUserData, login, sendLocalOtp, sendOtp, signUp, testController, verifyOtp } from "../controllers/userController.js";
+import {
+  getFirstRefreshTokenAfterSignin,
+  getUserData,
+  login,
+  logOut,
+  refreshToken,
+  sendLocalOtp,
+  sendOtp,
+  signUp,
+  testController,
+  verifyOtp,
+} from "../controllers/userController.js";
 
 const userRouter = Router();
 
@@ -9,6 +20,9 @@ userRouter.post("/signup", signUp);
 userRouter.post("/verifyotp", verifyOtp);
 userRouter.post("/login", login);
 userRouter.post("/localotp", sendLocalOtp);
-userRouter.post('/userdata', getUserData)
+userRouter.post("/logout", logOut);
+userRouter.post("/userdata", getUserData);
+userRouter.post("/refresh", refreshToken);
+userRouter.post("/token", getFirstRefreshTokenAfterSignin);
 
 export default userRouter;

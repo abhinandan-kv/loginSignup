@@ -3,10 +3,12 @@ import { STATUS_CODES } from "../utils/statusCodes.js";
 import { IpTable, otpTable, UserTable } from "../models/index.js";
 import sendOtpEmailEthereal from "../utils/sendOtpMail.js";
 import bcrypt, { compare } from "bcrypt";
-import { findOneUserInUserTable, findOneUserInUserTableWithSafeColumns } from "../services/user.services.js";
+import { findOneUserInUserTable, findOneUserInUserTableWithSafeColumns, findOneUserToken } from "../services/user.services.js";
 import { logUserLogin } from "../utils/getIp.js";
 import jwt from "jsonwebtoken";
 import sendOtpEmailGmailOAuth from "../utils/outhOtpMail.js";
+import { generateTokens, verifyRefreshToken } from "../utils/tokenGen.js";
+import { RefreshToken } from "../models/refreshTokenModel.js";
 
 const SALT_ROUNDS = 10;
 
@@ -204,6 +206,10 @@ export async function login(req, res) {
       return res.status(200).json({ message: "Invalid password" });
     }
 
+    // to get refresh token and access token
+    const tokenGen = await generateTokens(user);
+    console.log("tokenGen - ", tokenGen);
+
     res.status(201).json({ message: "Credentials Correct." });
   } catch (err) {
     console.error(err);
@@ -222,10 +228,6 @@ export async function sendLocalOtp(req, res = null) {
     }
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins validity
-
-    //fix later
-    const otpHashed = await bcrypt.hash(otpCode, SALT_ROUNDS);
-    // console.log("otpHashed", otpHashed);
 
     // await sendOtpEmailEthereal(email, otpCode);
     await sendOtpEmailGmailOAuth(email, otpCode);
@@ -251,11 +253,116 @@ export async function getUserData(req, res) {
     }
 
     const user = await findOneUserInUserTableWithSafeColumns(email);
+    console.log(user);
+    // const userToken = await findOneUserToken(user.dataValues.id);
+    // console.log(userToken);
     if (!user) return res.status(400).json({ message: "Invalid email." });
 
+    // const responseLoad = { user: user, token: userToken };
     return res.status(200).json({ message: "User Data retrived Sucessfully", user });
   } catch (err) {
     console.error("Error verifying OTP:", err);
     return res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+// export async function getFirstRefreshTokenAfterSignin(req, res) {
+//   try {
+//     const { id, name, email, verified } = req.body;
+//     // console.log("req body", req.body);
+
+//     const payload = { id, name, email, verified };
+//     // console.log(payload);
+
+//     const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+//     await RefreshToken.create({
+//       token: refreshToken,
+//       userId: id,
+//       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), //7days
+//     });
+//     res.cookie("refreshtoken", refreshToken, { maxAge: 604800000, httpOnly: true, secure: true });
+//     //sending token in response just for developing / testing purpose
+//     return res.status(200).send({ refreshToken });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({ message: "ERROR: Unable to set RefreshToken" });
+//   }
+// }
+
+export async function getFirstRefreshTokenAfterSignin(req, res) {
+  try {
+    const { id, name, email, verified } = req.body;
+    if (!id || !email) {
+      return res.status(400).json({ message: "Missing user data" });
+    }
+
+    const payload = { id, name, email, verified };
+
+    const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+    const accessToken = jwt.sign({ id, email }, process.env.JWT_SECRET, { expiresIn: "15m" });
+
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 604800000, // 7 days
+      sameSite: "strict",
+    });
+
+    return res.status(200).json({ refreshToken, accessToken });
+  } catch (error) {
+    console.error("Error creating refresh token:", error);
+    res.status(500).send({ message: "ERROR: Unable to create tokens" });
+  }
+}
+
+
+// export async function refreshToken(req, res) {
+//   const { refreshToken } = req.body;
+//   if (!refreshToken) return res.status(401).json({ message: "Missing refresh token" });
+
+//   const payload = verifyRefreshToken(refreshToken);
+//   if (!payload) return res.status(403).json({ message: "Invalid refresh token" });
+
+//   const newAccessToken = jwt.sign({ userId: payload.userId }, process.env.JWT_SECRET, { expiresIn: "15m" });
+
+//   return res.json({ accessToken: newAccessToken });
+// }
+
+export async function refreshToken(req, res) {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(401).json({ message: "Missing refresh token" });
+
+  try {
+    const payload = jwt.verify(refreshToken, process.env.JWT_SECRET);
+
+    const newAccessToken = jwt.sign(
+      { id: payload.id, email: payload.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    return res.json({ accessToken: newAccessToken });
+  } catch (err) {
+    console.error("Refresh token invalid:", err);
+    return res.status(403).json({ message: "Invalid refresh token" });
+  }
+}
+
+
+export async function logOut(req, res) {
+  try {
+    //need refreshToken from user <- handle later
+    await RefreshToken.update({ revoked: true }, { where: { token: refreshToken } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Internal Server Error" });
   }
 }

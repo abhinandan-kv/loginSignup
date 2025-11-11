@@ -32,12 +32,12 @@ export default function SignIn() {
         setEmail(values.email);
         const res = await axiosInstance.post("/user/login", values);
         console.log("Login success: ", res.data);
-        setOtpModalOpen(true);
         if (res.status === 200) {
           console.log(res.data.message);
           toast(res.data.message);
         }
         if (res.status === 201) {
+          setOtpModalOpen(true);
           console.log(res.data.message);
           toast(res.data.message);
           const getOtp = await axiosInstance.post("/user/localotp", { email });
@@ -88,36 +88,92 @@ export default function SignIn() {
   // };
 
   // method to check otp through localstorage
+  // const handleVerifyOtp = async () => {
+  //   try {
+  //     const storedOtp = JSON.parse(localStorage.getItem("otpData"));
+  //     console.log(storedOtp);
+  //     if (!storedOtp) {
+  //       toast("Otp data not found, Re-send OTP!");
+  //     }
+
+  //     const storedEncryptedOtp = storedOtp.otp;
+  //     const decryptStoredOtp = await decryptData(storedEncryptedOtp);
+  //     // console.log(decryptStoredOtp);
+  //     const expiresAt = storedOtp.expiresAt;
+  //     const expiredBool = Date.now() < new Date(expiresAt).getTime();
+  //     // console.log(new Date(expiresAt).getTime());
+  //     // console.log(Date.now());
+  //     // console.log(expiredBool);
+  //     if (otp === decryptStoredOtp && expiredBool) {
+  //       toast("Otp verified!");
+  //       const res = await axiosInstance.post("/user/userdata", { email });
+  //       // console.log(res);
+  //       const user = res.data.user;
+  //       // console.log(user);
+  //       // get the token after successfull otp verification
+  //       const tokenRes = await axiosInstance.post("/user/token", user);
+  //       // console.log(tokenRes);
+
+  //       const refreshToken = tokenRes.data.refreshToken;
+  //       // after getting the refreshToken callrefreshToken for accessToken
+  //       const accessTokenRes = await axiosInstance.post("/user/refresh", { refreshToken });
+  //       // console.log(accessTokenRes);
+  //       const accessToken = accessTokenRes.data.accessToken;
+
+  //       await setEncryptedItem("accessToken", accessToken);
+  //       await setEncryptedItem("refreshToken", refreshToken);
+
+  //       // await setEncryptedItem("userdata", user)
+  //       useUserStore.getState().setUser(user);
+  //       navigate({ to: "/dashboard", replace: true });
+  //     } else {
+  //       toast("Wrong Or expired OTP");
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
+
   const handleVerifyOtp = async () => {
     try {
       const storedOtp = JSON.parse(localStorage.getItem("otpData"));
-      console.log(storedOtp);
       if (!storedOtp) {
-        toast("Otp data not found, Re-send OTP!");
+        toast("OTP data not found, please resend OTP!");
+        return;
       }
 
       const storedEncryptedOtp = storedOtp.otp;
       const decryptStoredOtp = await decryptData(storedEncryptedOtp);
-      // console.log(decryptStoredOtp);
       const expiresAt = storedOtp.expiresAt;
-      const expiredBool = Date.now() < new Date(expiresAt).getTime();
-      // console.log(new Date(expiresAt).getTime());
-      // console.log(Date.now());
-      // console.log(expiredBool);
-      if (otp === decryptStoredOtp && expiredBool) {
-        toast("Otp verified!");
+      const notExpired = Date.now() < new Date(expiresAt).getTime();
+
+      if (otp === decryptStoredOtp && notExpired) {
+        toast("OTP verified!");
+
         const res = await axiosInstance.post("/user/userdata", { email });
         const user = res.data.user;
-        console.log(res);
-        console.log(user);
-        // await setEncryptedItem("userdata", user)
+
+        const tokenRes = await axiosInstance.post("/user/token", {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          verified: user.verified,
+        });
+
+        const { accessToken, refreshToken } = tokenRes.data;
+
+        await setEncryptedItem("accessToken", accessToken);
+        await setEncryptedItem("refreshToken", refreshToken);
+
         useUserStore.getState().setUser(user);
+
         navigate({ to: "/dashboard", replace: true });
       } else {
-        toast("Wrong Or expired OTP");
+        toast("Wrong or expired OTP");
       }
     } catch (err) {
-      console.log(err);
+      console.error("Error verifying OTP:", err);
+      toast("Error verifying OTP");
     }
   };
 
@@ -203,7 +259,7 @@ export default function SignIn() {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    navigate({ to: "/signup" });
+                    navigate({ to: "/" });
                   }}
                   className="font-medium text-blue-600 hover:underline"
                 >

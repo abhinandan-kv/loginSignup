@@ -21,8 +21,8 @@ export function AppSidebar() {
 
   const data = {
     user: {
-      name: user.name ?? "Username",
-      email: user.email ?? "username@email.com",
+      name: user?.name ?? "Username",
+      email: user?.email ?? "username@email.com",
       avatar: avatar,
     },
   };
