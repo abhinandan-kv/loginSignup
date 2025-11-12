@@ -9,7 +9,7 @@ const UserTable = sequelize.define(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: { isEmail: true },
+      //removed validation because of encryption
     },
     password: { type: DataTypes.STRING, allowNull: false },
     verified: {

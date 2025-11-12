@@ -11,7 +11,8 @@ import { generateTokens, verifyRefreshToken } from "../utils/tokenGen.js";
 import { RefreshToken } from "../models/refreshTokenModel.js";
 import sendResetLinkEmail from "../utils/oauthResetMail.js";
 import { configDotenv } from "dotenv";
-configDotenv()
+import { decrypt, decryptDeterministic, encrypt, encryptDeterministic } from "../utils/cryptoUtils.js";
+configDotenv();
 
 const SALT_ROUNDS = 10;
 
@@ -41,16 +42,21 @@ export async function signUp(req, res) {
     }
 
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    const newUser = await UserTable.create({ name, email, password: hashedPassword });
+    const encryptedName = await encryptDeterministic(name);
+    const encryptedEmail = await encryptDeterministic(email);
+    console.log("Encrpyted data- ", { encryptedEmail, encryptedName });
+    const newUser = await UserTable.create({ name: encryptedName, email: encryptedEmail, password: hashedPassword });
 
     // const otpCode = Math.floor(100000 + Math.random() * 900000);
     const otpCode = await OtpGen();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     // await sendOtpEmailEthereal(email, otpCode);
-    await sendOtpEmailGmailOAuth(email, otpCode);
+    // await sendOtpEmailGmailOAuth(email, otpCode);
 
-    await sendOtp(req);
+    console.log("encryptedEmail - 1-", encryptedEmail);
+    console.log("dencryptedEmail - 1-", await decryptDeterministic(encryptedEmail));
+    await sendOtp(encryptedEmail);
     res.status(201).json({ message: "OTP sent to your email." });
   } catch (error) {
     console.error(error);
@@ -58,9 +64,9 @@ export async function signUp(req, res) {
   }
 }
 
-export async function sendOtp(req, res = null) {
+export async function sendOtp(encryptedEmail, res = null) {
   try {
-    const { email } = req.body;
+    const email = await decryptDeterministic(encryptedEmail);
 
     if (!email) {
       const message = "Email is required.";
@@ -68,7 +74,9 @@ export async function sendOtp(req, res = null) {
       throw new Error(message);
     }
 
-    const user = await UserTable.findOne({ where: { email } });
+    const user = await UserTable.findOne({ where: { email: encryptedEmail } });
+    console.log("user -", user);
+
     if (!user) {
       const message = "User not found. Please register first.";
       if (res) return res.status(404).json({ message });
@@ -116,7 +124,8 @@ export async function verifyOtp(req, res) {
       return res.status(400).json({ message: "Email and OTP are required." });
     }
 
-    const user = await findOneUserInUserTable(email);
+    const encryptedEmail = await encryptDeterministic(email);
+    const user = await findOneUserInUserTable(encryptedEmail);
     if (!user) return res.status(400).json({ message: "Invalid email." });
 
     const otpRecord = await otpTable.findOne({
@@ -193,7 +202,8 @@ export async function login(req, res) {
       return res.status(200).json({ message: "Email and password are required" });
     }
 
-    const user = await findOneUserInUserTable(email);
+    const encryptEmail = await encryptDeterministic(email);
+    const user = await findOneUserInUserTable(encryptEmail);
     if (!user) {
       return res.status(200).json({ message: "User not found" });
     }
@@ -251,21 +261,58 @@ export async function sendLocalOtp(req, res = null) {
   }
 }
 
+export async function logUserIpAfterLogin(req, res) {
+  try {
+    const { ip, userAgent } = req;
+    const { id } = req.body;
+
+    await logUserLogin(req, id);
+
+    // const encryptIp = await encryptDeterministic(ip);
+    // const encryptUserAgent = await encryptDeterministic(userAgent);
+
+    const ipValue = ip || req.ip || "";
+    const userAgentValue = userAgent || req.headers["user-agent"] || "";
+
+    const response = await IpTable.create({
+      ip: encryptDeterministic(ipValue),
+      userAgent: encryptDeterministic(userAgentValue),
+      userId: id,
+    });
+
+    res.status(200).send({ message: "Logged Successfully", response: response });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Internal Error Occured" });
+  }
+}
+
 export async function getUserData(req, res) {
   try {
     const { email } = req.body;
-    console.log(req.body);
-    if (!email) {
+    console.log("req.body getUserData-> ", req.body);
+    if (!email) { 
       return res.status(400).json({ message: "Email is required." });
     }
 
-    const user = await findOneUserInUserTableWithSafeColumns(email);
-    console.log(user);
+    const encryptEmail = await encryptDeterministic(email);
+    const userRes = await findOneUserInUserTableWithSafeColumns(encryptEmail);
+    console.log(userRes);
     // const userToken = await findOneUserToken(user.dataValues.id);
     // console.log(userToken);
-    if (!user) return res.status(400).json({ message: "Invalid email." });
+    if (!userRes) return res.status(400).json({ message: "Invalid email." });
 
     // const responseLoad = { user: user, token: userToken };
+    const decryptedName = await decryptDeterministic(userRes.dataValues.name);
+    const decryptedEmail = await decryptDeterministic(userRes.dataValues.email);
+
+    const user = {
+      name: decryptedName,
+      email: decryptedEmail,
+      id: userRes.dataValues.id,
+      verified: userRes.dataValues.verified,
+    };
+
     return res.status(200).json({ message: "User Data retrived Sucessfully", user });
   } catch (err) {
     console.error("Error verifying OTP:", err);
@@ -382,7 +429,8 @@ export async function logOut(req, res) {
 
 export async function forgotPassword(req, res) {
   const { email } = req.body;
-  const user = await findOneUserInUserTable(email);
+  const encryptedEmail = await encryptDeterministic(email);
+  const user = await findOneUserInUserTable(encryptedEmail);
   if (!user) return res.status(404).json({ message: "No account with that email." });
 
   const token = jwt.sign({ id: user.dataValues.id, email }, process.env.RESET_TOKEN_SECRET, { expiresIn: "15m" });
@@ -407,7 +455,8 @@ export async function resetPassword(req, res) {
   const { token, password } = req.body;
   try {
     const payload = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
-    const user = await findOneUserInUserTable(payload.email);
+    const encryptedEmail = await encryptDeterministic(payload.email);
+    const user = await findOneUserInUserTable(encryptedEmail);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const hashed = await bcrypt.hash(password, 10);

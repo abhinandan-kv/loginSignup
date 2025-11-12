@@ -152,6 +152,7 @@ export default function SignIn() {
         toast("OTP verified!");
 
         const res = await axiosInstance.post("/user/userdata", { email });
+        console.log(res);
         const user = res.data.user;
 
         const tokenRes = await axiosInstance.post("/user/token", {
@@ -160,6 +161,9 @@ export default function SignIn() {
           email: user.email,
           verified: user.verified,
         });
+
+        const ipLog = await axiosInstance.post("/user/logip", { id: user.id });
+        console.log(ipLog);
 
         const { accessToken, refreshToken } = tokenRes.data;
 

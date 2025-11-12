@@ -5,6 +5,7 @@ import {
   getUserData,
   login,
   logOut,
+  logUserIpAfterLogin,
   refreshToken,
   resetPassword,
   sendLocalOtp,
@@ -23,6 +24,7 @@ userRouter.post("/signup", signUp);
 userRouter.post("/verifyotp", verifyOtp);
 userRouter.post("/login", login);
 userRouter.post("/localotp", sendLocalOtp);
+userRouter.post("/logip", logUserIpAfterLogin);
 userRouter.post("/logout", logOut);
 userRouter.post("/userdata", getUserData);
 userRouter.post("/refresh", refreshToken);
