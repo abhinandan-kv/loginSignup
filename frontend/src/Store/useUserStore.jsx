@@ -11,16 +11,29 @@ let refreshInterval = null;
 export const useUserStore = create((set, get) => ({
   user: null,
   lastActive: Date.now(),
+  persistentSession: false,
 
-  setUser: (data) => {
-    set({ user: data, lastActive: Date.now() });
-    setEncryptedItem("userdata", data);
+  setUser: async (data, remember = false) => {
+    set({ user: data, lastActive: Date.now(), persistentSession: remember });
+
+    if (remember) {
+      await setEncryptedItem("userdata", data);
+    } else {
+      sessionStorage.setItem("userdata", JSON.stringify(data));
+    }
+
     get().startIdleTimer();
     get().startRefreshLoop();
   },
 
   loadUser: async () => {
-    const stored = await getDecryptedItem("userdata");
+    let stored = await getDecryptedItem("userdata");
+
+    if (!stored) {
+      const sessionData = sessionStorage.getItem("userdata");
+      if (sessionData) stored = JSON.parse(sessionData);
+    }
+
     if (stored) {
       set({ user: stored });
       get().startIdleTimer();
@@ -48,9 +61,14 @@ export const useUserStore = create((set, get) => ({
     localStorage.removeItem("refreshToken");
     // cookieStore.delete("refreshToken");
 
+    sessionStorage.removeItem("userdata");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("refreshToken");
+
     clearTimeout(idleTimer);
     clearTimeout(warningTimer);
     clearInterval(refreshInterval);
+    return true;
   },
 
   refreshActivity: () => {

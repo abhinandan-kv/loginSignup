@@ -18,6 +18,7 @@ export default function SignIn() {
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [email, setEmail] = useState(undefined);
+  const [remember, setRemember] = useState(false);
 
   const validationSchema = Yup.object({
     email: Yup.string().email("Invalid email").required("Email is required"),
@@ -162,10 +163,17 @@ export default function SignIn() {
 
         const { accessToken, refreshToken } = tokenRes.data;
 
-        await setEncryptedItem("accessToken", accessToken);
-        await setEncryptedItem("refreshToken", refreshToken);
+        if (remember) {
+          await setEncryptedItem("accessToken", accessToken);
+          await setEncryptedItem("refreshToken", refreshToken);
+          await setEncryptedItem("userdata", user);
+        } else {
+          sessionStorage.setItem("accessToken", accessToken);
+          sessionStorage.setItem("refreshToken", refreshToken);
+          sessionStorage.setItem("userdata", JSON.stringify(user));
+        }
 
-        useUserStore.getState().setUser(user);
+        useUserStore.getState().setUser(user, remember);
 
         navigate({ to: "/dashboard", replace: true });
       } else {
@@ -233,6 +241,8 @@ export default function SignIn() {
                   <input
                     id="remember"
                     type="checkbox"
+                    checked={remember}
+                    onChange={(e) => setRemember(e.target.value)}
                     className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300"
                   />
                   <label htmlFor="remember" className="ml-2 text-sm text-gray-500">
