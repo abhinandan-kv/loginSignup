@@ -6,8 +6,9 @@ import SignUp from "./Pages/Auth/SignUp";
 import { toast, Toaster } from "sonner";
 import RouterProviderWrapper from "./Router/router";
 import { useUserStore } from "./Store/useUserStore";
+import { ThemeProvider } from "./Components/Providers/ThemeProvider";
 
-function App({ children }) {
+function App() {
   const user = useUserStore((state) => state.user);
   const refreshActivity = useUserStore((state) => state.refreshActivity);
 
@@ -38,10 +39,11 @@ function App({ children }) {
   }, [user]);
   return (
     <>
-      <Toaster />
-      {/* Tanstack Router */}
-      <RouterProviderWrapper />
-      {children}
+      <ThemeProvider attribute="class" default="system" enableSystem>
+        <Toaster />
+        {/* Tanstack Router */}
+        <RouterProviderWrapper />
+      </ThemeProvider>
     </>
   );
 }

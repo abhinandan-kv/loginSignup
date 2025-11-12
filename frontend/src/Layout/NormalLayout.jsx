@@ -9,8 +9,8 @@ const NormalLayout = ({ children }) => {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
 
-        <main className="flex-1 flex flex-col bg-[#0a0a0a]">
-          <div className="flex items-center justify-between p-2.5 border-b">
+        <main className="flex-1 flex flex-col bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100">
+          <div className="flex items-center justify-between p-2.5 border-b border-neutral-200 dark:border-neutral-700">
             <SidebarTrigger />
             <CommandMenu />
           </div>
@@ -21,4 +21,5 @@ const NormalLayout = ({ children }) => {
     </SidebarProvider>
   );
 };
+
 export default NormalLayout;

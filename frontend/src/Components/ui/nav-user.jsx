@@ -16,6 +16,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/c
 import { useUserStore } from "@/Store/useUserStore";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { ThemeToggle } from "../ThemeToggle";
 
 export function NavUser({ user }) {
   const { isMobile } = useSidebar();
@@ -91,6 +92,7 @@ export function NavUser({ user }) {
                 <IconNotification />
                 Notifications
               </DropdownMenuItem>
+                <ThemeToggle />
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogOut}>
