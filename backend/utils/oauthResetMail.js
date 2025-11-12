@@ -11,7 +11,7 @@ const SENDER_EMAIL = process.env.EMAIL_OAUTH_SENDER_EMAIL;
 const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
-const sendOtpEmailGmailOAuth = async (to, otp) => {
+const sendResetLinkEmail = async (to, link) => {
   try {
     const { token: accessToken } = await oAuth2Client.getAccessToken();
     console.log("accessToken", accessToken);
@@ -31,16 +31,16 @@ const sendOtpEmailGmailOAuth = async (to, otp) => {
     const mailOptions = {
       from: `"ExpressWay" <${SENDER_EMAIL}>`,
       to,
-      subject: "Your One-Time Password (OTP) for ExpressWay App",
-      text: `Hello,\n\nYour One-Time Password (OTP) is: ${otp}. It is valid for 5 minutes. Please use it to complete your action.\n\nIf you did not request this, please ignore this email.`,
+      subject: "Password Reset Request for ExpressWay",
+      text: `Hello,\n\nWe received a request to reset your password. Please click on the link below to set your new password. The link will be valid for 15 minutes.\n\n${link}\n\nIf you did not request this, please ignore this email.`,
       html: `
     <html>
       <body>
         <p>Hello,</p>
-        <p>Your One-Time Password (OTP) is: <b>${otp}</b>. It is valid for 5 minutes.</p>
-        <p>Please use this OTP to complete your action.</p>
+        <p>We received a request to reset your password. Please click the link below to set your new password. This link will be valid for 15 minutes:</p>
+        <p><a href="${link}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Your Password</a></p>
         <p>If you did not request this, please ignore this email.</p>
-        <p>Best regards,<br>ExpressWay App Team</p>
+        <p>Best regards,<br>ExpressWay Team</p>
       </body>
     </html>
   `,
@@ -56,4 +56,4 @@ const sendOtpEmailGmailOAuth = async (to, otp) => {
   }
 };
 
-export default sendOtpEmailGmailOAuth;
+export default sendResetLinkEmail;

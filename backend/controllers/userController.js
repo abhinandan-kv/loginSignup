@@ -9,6 +9,9 @@ import jwt from "jsonwebtoken";
 import sendOtpEmailGmailOAuth from "../utils/outhOtpMail.js";
 import { generateTokens, verifyRefreshToken } from "../utils/tokenGen.js";
 import { RefreshToken } from "../models/refreshTokenModel.js";
+import sendResetLinkEmail from "../utils/oauthResetMail.js";
+import { configDotenv } from "dotenv";
+configDotenv()
 
 const SALT_ROUNDS = 10;
 
@@ -40,7 +43,8 @@ export async function signUp(req, res) {
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     const newUser = await UserTable.create({ name, email, password: hashedPassword });
 
-    const otpCode = Math.floor(100000 + Math.random() * 900000);
+    // const otpCode = Math.floor(100000 + Math.random() * 900000);
+    const otpCode = await OtpGen();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     // await sendOtpEmailEthereal(email, otpCode);
@@ -71,7 +75,8 @@ export async function sendOtp(req, res = null) {
       throw new Error(message);
     }
 
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    // const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpCode = await OtpGen();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins validity
 
     //fix later
@@ -226,7 +231,8 @@ export async function sendLocalOtp(req, res = null) {
       if (res) return res.status(400).json({ message });
       throw new Error(message);
     }
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    // const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpCode = await OtpGen();
     console.log("OTP-", otpCode); //for dev purpose only
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins validity
 
@@ -371,5 +377,44 @@ export async function logOut(req, res) {
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: "Internal Server Error" });
+  }
+}
+
+export async function forgotPassword(req, res) {
+  const { email } = req.body;
+  const user = await findOneUserInUserTable(email);
+  if (!user) return res.status(404).json({ message: "No account with that email." });
+
+  const token = jwt.sign({ id: user.dataValues.id, email }, process.env.RESET_TOKEN_SECRET, { expiresIn: "15m" });
+
+  const link = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+  await sendResetLinkEmail(email, link);
+
+  return res.status(200).json({ message: "Password reset link sent to your email." });
+}
+
+export async function verifyResetToken(req, res) {
+  const { token } = req.query;
+  try {
+    const payload = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
+    return res.status(200).json({ valid: true, email: payload.email });
+  } catch {
+    return res.status(400).json({ valid: false });
+  }
+}
+
+export async function resetPassword(req, res) {
+  const { token, password } = req.body;
+  try {
+    const payload = jwt.verify(token, process.env.RESET_TOKEN_SECRET);
+    const user = await findOneUserInUserTable(payload.email);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const hashed = await bcrypt.hash(password, 10);
+    await user.update({ password: hashed });
+
+    return res.status(200).json({ message: "Password reset successful" });
+  } catch (err) {
+    return res.status(400).json({ message: "Invalid or expired token" });
   }
 }

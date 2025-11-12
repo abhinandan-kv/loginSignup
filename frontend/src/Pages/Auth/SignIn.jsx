@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import axiosInstance from "../../utils/AxiosApi/AxiosInstance";
 import { toast } from "sonner";
 import { decryptData, encryptData, setEncryptedItem } from "../../utils/Encryption/EncryptDecrypt";
@@ -240,9 +240,9 @@ export default function SignIn() {
                   </label>
                 </div>
 
-                <a href="#" className="text-sm font-medium text-blue-600 hover:underline transition duration-150">
+                <Link to={"/forgot-password"} className="text-sm font-medium text-blue-600 hover:underline transition duration-150">
                   Forgot password?
-                </a>
+                </Link>
               </div>
 
               <button
