@@ -227,6 +227,7 @@ export async function sendLocalOtp(req, res = null) {
       throw new Error(message);
     }
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log("OTP-", otpCode); //for dev purpose only
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins validity
 
     // await sendOtpEmailEthereal(email, otpCode);
@@ -323,7 +324,6 @@ export async function getFirstRefreshTokenAfterSignin(req, res) {
   }
 }
 
-
 // export async function refreshToken(req, res) {
 //   const { refreshToken } = req.body;
 //   if (!refreshToken) return res.status(401).json({ message: "Missing refresh token" });
@@ -343,11 +343,7 @@ export async function refreshToken(req, res) {
   try {
     const payload = jwt.verify(refreshToken, process.env.JWT_SECRET);
 
-    const newAccessToken = jwt.sign(
-      { id: payload.id, email: payload.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
+    const newAccessToken = jwt.sign({ id: payload.id, email: payload.email }, process.env.JWT_SECRET, { expiresIn: "15m" });
 
     return res.json({ accessToken: newAccessToken });
   } catch (err) {
@@ -356,11 +352,22 @@ export async function refreshToken(req, res) {
   }
 }
 
-
 export async function logOut(req, res) {
   try {
+    const { refreshToken } = req.body;
+    console.log(req.body);
     //need refreshToken from user <- handle later
-    await RefreshToken.update({ revoked: true }, { where: { token: refreshToken } });
+    const response = await RefreshToken.update({ revoked: true }, { where: { token: refreshToken } });
+    console.log(response);
+    if (response) {
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      });
+    }
+
+    res.status(200).send({ message: "refresh token updated successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: "Internal Server Error" });

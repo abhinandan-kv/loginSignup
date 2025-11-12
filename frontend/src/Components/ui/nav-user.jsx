@@ -13,12 +13,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
-import { useStore } from "zustand";
 import { useUserStore } from "@/Store/useUserStore";
+import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
 export function NavUser({ user }) {
   const { isMobile } = useSidebar();
-  const logOut = useUserStore(state => state.logOut);
+  const logOut = useUserStore((state) => state.logOut);
+  console.log(logOut);
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+
+  async function handleLogOut(e) {
+    try {
+      setLoading(true);
+      await logOut();
+      navigate({ to: "/signin", replace: true });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <SidebarMenu>
@@ -72,7 +93,7 @@ export function NavUser({ user }) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logOut}>
+            <DropdownMenuItem onClick={handleLogOut}>
               <IconLogout />
               Log out
             </DropdownMenuItem>

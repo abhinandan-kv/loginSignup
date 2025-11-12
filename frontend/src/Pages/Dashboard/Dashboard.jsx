@@ -5,6 +5,9 @@ import DashboardArea from "@/Components/DashboardArea";
 import { useUserStore } from "@/Store/useUserStore";
 
 const Dashboard = () => {
+  const [loading, setLoading] = useState(true);
+
+  const loadUser = useUserStore((state) => state.loadUser);
   const user = useUserStore((state) => state.user);
   // useEffect(() => {
   // change this to use central state/store directlye
@@ -15,7 +18,19 @@ const Dashboard = () => {
   // getDataFromLocalStroage();
   // }, []);
 
+  useEffect(() => {
+    (async () => {
+      await loadUser();
+      setLoading(false);
+    })();
+  }, [loadUser]);
+
   console.log(user);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <NormalLayout>
       <DashboardArea />
