@@ -22,18 +22,22 @@ export default function ForgotPassword() {
   });
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <form onSubmit={formik.handleSubmit} className="bg-white p-6 rounded-xl shadow-md w-96">
-        <h2 className="text-xl font-semibold mb-4 text-center">Forgot Password</h2>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-50 dark:bg-neutral-900">
+      <form onSubmit={formik.handleSubmit} className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-md w-96">
+        <h2 className="text-xl font-semibold mb-4 text-center text-neutral-900 dark:text-neutral-50">Forgot Password</h2>
         <input
           name="email"
           type="email"
           placeholder="Your email"
           onChange={formik.handleChange}
           value={formik.values.email}
-          className="w-full border p-2 rounded mb-3"
+          className="w-full border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 p-2 rounded mb-3 focus:ring-blue-500 focus:border-blue-500"
         />
-        <button type="submit" disabled={formik.isSubmitting} className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        <button
+          type="submit"
+          disabled={formik.isSubmitting}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 disabled:opacity-60"
+        >
           {formik.isSubmitting ? "Sending..." : "Send Reset Link"}
         </button>
       </form>

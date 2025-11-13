@@ -16,11 +16,7 @@ export const useUserStore = create((set, get) => ({
   setUser: async (data, remember = false) => {
     set({ user: data, lastActive: Date.now(), persistentSession: remember });
 
-    if (remember) {
-      await setEncryptedItem("userdata", data);
-    } else {
-      sessionStorage.setItem("userdata", JSON.stringify(data));
-    }
+    await setEncryptedItem("userdata", data, remember);
 
     get().startIdleTimer();
     get().startRefreshLoop();
@@ -101,7 +97,7 @@ export const useUserStore = create((set, get) => ({
   //refresh token server side
   startRefreshLoop: () => {
     clearInterval(refreshInterval);
-    const REFRESH_INTERVAL = 10 * 60 * 1000; //10mins
+    const REFRESH_INTERVAL = 10 * 60 * 1000;
     const user = get().user;
     if (!user) return;
 
@@ -109,19 +105,17 @@ export const useUserStore = create((set, get) => ({
       const now = Date.now();
       const inactiveTime = now - get().lastActive;
 
-      // Stop refreshing if user idle beyond threshold (e.g., 15 mins)
       if (inactiveTime > 15 * 60 * 1000) {
         console.log("User inactive, skipping token refresh");
         clearInterval(refreshInterval);
         return;
       }
+
       try {
         const newToken = await refreshAccessToken();
         if (newToken) {
           console.log("Token refreshed successfully");
-          const updatedUser = { ...user, token: newToken };
-          set({ user: updatedUser });
-          setEncryptedItem("userdata", updatedUser);
+          await setEncryptedItem("accessToken", newToken);
         }
       } catch (error) {
         console.warn("Token refresh failed -> logging out");

@@ -55,45 +55,48 @@ const SignUp = () => {
   });
 
   return (
-    <section className="min-h-screen bg-gray-50 flex items-center justify-center py-8 px-4">
+    <section className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center py-8 px-4">
       <div className="flex flex-col items-center justify-center w-full">
-        <a href="#" className="flex items-center mb-6 text-2xl font-semibold text-gray-900">
+        <a href="#" className="flex items-center mb-6 text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
           <LogoIcon />
           ExpressWay
         </a>
 
-        <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200">
+        <div className="w-full max-w-md bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700">
           <div className="p-6 space-y-6 sm:p-8">
-            <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">Sign up to your account</h1>
+            <h1 className="text-xl font-bold leading-tight tracking-tight text-neutral-900 dark:text-neutral-50 md:text-2xl">
+              Sign up to your account
+            </h1>
 
             <form className="space-y-4 md:space-y-6" onSubmit={formik.handleSubmit}>
               <div>
-                <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900">
+                <label htmlFor="name" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-neutral-300">
                   Your Name
                 </label>
                 <input
                   type="text"
                   name="name"
                   id="name"
-                  className={`bg-gray-50 border ${
-                    formik.touched.name && formik.errors.name ? "border-red-500" : "border-gray-300"
-                  } text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                  className={`bg-neutral-50 dark:bg-neutral-700 border ${
+                    formik.touched.name && formik.errors.name ? "border-red-500" : "border-neutral-300 dark:border-neutral-600"
+                  } text-neutral-900 dark:text-neutral-50 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                   placeholder="yourgoodname"
                   {...formik.getFieldProps("name")}
                 />
                 {formik.touched.name && formik.errors.name ? <p className="text-red-500 text-sm mt-1">{formik.errors.name}</p> : null}
               </div>
+
               <div>
-                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900">
+                <label htmlFor="email" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-neutral-300">
                   Your email
                 </label>
                 <input
                   type="email"
                   name="email"
                   id="email"
-                  className={`bg-gray-50 border ${
-                    formik.touched.email && formik.errors.email ? "border-red-500" : "border-gray-300"
-                  } text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                  className={`bg-neutral-50 dark:bg-neutral-700 border ${
+                    formik.touched.email && formik.errors.email ? "border-red-500" : "border-neutral-300 dark:border-neutral-600"
+                  } text-neutral-900 dark:text-neutral-50 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                   placeholder="name@company.com"
                   {...formik.getFieldProps("email")}
                 />
@@ -101,16 +104,16 @@ const SignUp = () => {
               </div>
 
               <div>
-                <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900">
+                <label htmlFor="password" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-neutral-300">
                   Password
                 </label>
                 <input
                   type="password"
                   name="password"
                   id="password"
-                  className={`bg-gray-50 border ${
-                    formik.touched.password && formik.errors.password ? "border-red-500" : "border-gray-300"
-                  } text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                  className={`bg-neutral-50 dark:bg-neutral-700 border ${
+                    formik.touched.password && formik.errors.password ? "border-red-500" : "border-neutral-300 dark:border-neutral-600"
+                  } text-neutral-900 dark:text-neutral-50 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                   placeholder="••••••••"
                   {...formik.getFieldProps("password")}
                 />
@@ -118,20 +121,22 @@ const SignUp = () => {
               </div>
 
               <div className="flex items-center justify-end">
-                <a
-                  href="#"
-                  className="text-sm font-medium text-blue-600 hover:underline transition duration-150"
-                  onClick={() => navigate({ to: "/signin" })}
-                >
-                  Login
-                </a>
+                <p className="text-sm font-light text-neutral-500 text-center dark:text-neutral-400">
+                  Already A User?{" "}
+                  <a
+                    href="#"
+                    className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400 transition duration-150"
+                    onClick={() => navigate({ to: "/signin" })}
+                  >
+                    Login
+                  </a>{" "}
+                </p>
               </div>
 
               <button
                 type="submit"
                 disabled={formik.isSubmitting}
-                className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none 
-                           focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition duration-150"
+                className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition duration-150"
               >
                 {formik.isSubmitting ? "Signing up..." : "Sign up"}
               </button>
@@ -141,10 +146,10 @@ const SignUp = () => {
       </div>
 
       {showOtpModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-100 bg-opacity-40 z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm text-center space-y-4">
-            <h2 className="text-xl font-semibold">Enter OTP</h2>
-            <p className="text-gray-500 text-sm">
+        <div className="fixed inset-0 flex items-center justify-center bg-neutral-100 dark:bg-neutral-900 bg-opacity-40 dark:bg-opacity-70 z-50">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-6 w-full max-w-sm text-center space-y-4">
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">Enter OTP</h2>
+            <p className="text-neutral-500 dark:text-neutral-300 text-sm">
               We've sent an OTP to <span className="font-medium">{emailForOtp}</span>
             </p>
             <input
@@ -153,13 +158,19 @@ const SignUp = () => {
               placeholder="Enter OTP"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-2 text-center text-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-neutral-300 dark:border-neutral-700 rounded-lg p-2 text-center text-lg dark:bg-neutral-700 dark:text-neutral-50 focus:ring-blue-500 focus:border-blue-500"
             />
             <div className="flex justify-center space-x-3 mt-4">
-              <button onClick={() => setShowOtpModal(false)} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition">
+              <button
+                onClick={() => setShowOtpModal(false)}
+                className="px-4 py-2 rounded-lg bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition"
+              >
                 Cancel
               </button>
-              <button onClick={handleClick} className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
+              <button
+                onClick={handleClick}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition"
+              >
                 Verify
               </button>
             </div>

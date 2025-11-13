@@ -12,6 +12,7 @@ import { RefreshToken } from "../models/refreshTokenModel.js";
 import sendResetLinkEmail from "../utils/oauthResetMail.js";
 import { configDotenv } from "dotenv";
 import { decrypt, decryptDeterministic, encrypt, encryptDeterministic } from "../utils/cryptoUtils.js";
+import { Op } from "sequelize";
 configDotenv();
 
 const SALT_ROUNDS = 10;
@@ -291,7 +292,7 @@ export async function getUserData(req, res) {
   try {
     const { email } = req.body;
     console.log("req.body getUserData-> ", req.body);
-    if (!email) { 
+    if (!email) {
       return res.status(400).json({ message: "Email is required." });
     }
 
@@ -347,21 +348,34 @@ export async function getUserData(req, res) {
 export async function getFirstRefreshTokenAfterSignin(req, res) {
   try {
     const { id, name, email, verified } = req.body;
+
     if (!id || !email) {
       return res.status(400).json({ message: "Missing user data" });
     }
 
-    const payload = { id, name, email, verified };
+    const existingToken = await RefreshToken.findOne({
+      where: {
+        userId: id,
+        expiresAt: { [Op.gt]: new Date() }, 
+      },
+      order: [["createdAt", "DESC"]],
+    });
 
-    const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
+    let refreshToken;
+    if (existingToken) {
+      refreshToken = existingToken.token;
+    } else {
+      const payload = { id, name, email, verified };
+      refreshToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+      await RefreshToken.create({
+        token: refreshToken,
+        userId: id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+    }
 
     const accessToken = jwt.sign({ id, email }, process.env.JWT_SECRET, { expiresIn: "15m" });
-
-    await RefreshToken.create({
-      token: refreshToken,
-      userId: id,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -389,9 +403,10 @@ export async function getFirstRefreshTokenAfterSignin(req, res) {
 //   return res.json({ accessToken: newAccessToken });
 // }
 
-export async function refreshToken(req, res) {
+export async function refreshAccessToken(req, res) {
   const { refreshToken } = req.body;
   if (!refreshToken) return res.status(401).json({ message: "Missing refresh token" });
+  console.log("resfresh Token ->", refreshToken);
 
   try {
     const payload = jwt.verify(refreshToken, process.env.JWT_SECRET);
@@ -465,5 +480,14 @@ export async function resetPassword(req, res) {
     return res.status(200).json({ message: "Password reset successful" });
   } catch (err) {
     return res.status(400).json({ message: "Invalid or expired token" });
+  }
+}
+
+export async function getTotalUserCount(req, res) {
+  try {
+    res.status(200).send({ message: "Current User Count Data Retrived" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Internal server error" });
   }
 }

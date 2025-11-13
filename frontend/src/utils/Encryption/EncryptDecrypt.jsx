@@ -35,6 +35,7 @@ async function getKey() {
 // Encrypt data (handles both primitives & objects)
 export async function encryptData(data) {
   try {
+    console.log("data to encrypt ->", data);
     const key = await getKey();
     const iv = crypto.getRandomValues(new Uint8Array(12));
 
@@ -42,7 +43,7 @@ export async function encryptData(data) {
       __type: typeof data,
       value: data,
     };
-
+    // <----------- fix this tommorrow ------------>
     const encodedData = new TextEncoder().encode(JSON.stringify(payload));
     const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encodedData);
 
@@ -66,6 +67,7 @@ export async function decryptData(encryptedBase64) {
     const encryptedData = combined.slice(12);
 
     const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encryptedData);
+    // console.log("data decrypted", decrypted);
     const decoded = new TextDecoder().decode(decrypted);
     const parsed = JSON.parse(decoded);
 
@@ -88,25 +90,37 @@ export async function decryptData(encryptedBase64) {
 }
 
 // Safely store in localStorage
-export async function setEncryptedItem(key, value) {
+export async function setEncryptedItem(key, value, remember = false) {
+  // keep this true when calling for localstorage
   try {
-    const encrypted = await encryptData(value);
-    if (encrypted) localStorage.setItem(key, encrypted);
+    if (remember) {
+      const encrypted = await encryptData(value);
+      if (encrypted) localStorage.setItem(key, encrypted);
+    } else {
+      const encrypted = await encryptData(value);
+      if (encrypted) sessionStorage.setItem(key, encrypted);
+    }
   } catch (err) {
     console.error("Failed to set encrypted item:", err);
   }
 }
 
-// Retrieve from localStorage
+// Retrieve from localStorage or sessionStorage
 export async function getDecryptedItem(key) {
-  const encrypted = localStorage.getItem(key);
-  if (!encrypted) return null;
-  return await decryptData(encrypted);
+  try {
+    const encrypted = localStorage.getItem(key) || sessionStorage.getItem(key);
+    console.log("encrypted found -> ", encrypted);
+    if (!encrypted) return null;
+    return await decryptData(encrypted);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 // Remove item
 export function removeEncryptedItem(key) {
   localStorage.removeItem(key);
+  sessionStorage.removeItem(key);
 }
 
 // (async () => {
