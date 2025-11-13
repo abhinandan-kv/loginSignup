@@ -43,7 +43,6 @@ export async function encryptData(data) {
       __type: typeof data,
       value: data,
     };
-    // <----------- fix this tommorrow ------------>
     const encodedData = new TextEncoder().encode(JSON.stringify(payload));
     const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encodedData);
 

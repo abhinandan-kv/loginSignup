@@ -10,33 +10,47 @@ let refreshInterval = null;
 
 export const useUserStore = create((set, get) => ({
   user: null,
+  roles: [],
+  permissions: [],
   lastActive: Date.now(),
   persistentSession: false,
 
   setUser: async (data, remember = false) => {
-    set({ user: data, lastActive: Date.now(), persistentSession: remember });
+    const { user, roles = [], permissions = [] } = data;
+    const userData = { ...user, roles, permissions };
+    set({ user: userData, roles, permissions, lastActive: Date.now(), persistentSession: remember });
 
-    await setEncryptedItem("userdata", data, remember);
+    // await setEncryptedItem("userdata", userData, remember);
 
     get().startIdleTimer();
     get().startRefreshLoop();
   },
 
   loadUser: async () => {
-    let stored = await getDecryptedItem("userdata");
+    let storedUserData = await getDecryptedItem("userdata");
+    let storedUserRole = await getDecryptedItem("role");
+    let storedUserPermission = await getDecryptedItem("permission");
 
-    if (!stored) {
-      const sessionData = sessionStorage.getItem("userdata");
-      if (sessionData) stored = JSON.parse(sessionData);
-    }
+    // if (!storedUserData) {
+    //   const sessionData = sessionStorage.getItem("userdata");
+    //   if (sessionData) storedUserData = JSON.parse(sessionData);
+    // }
 
-    if (stored) {
-      set({ user: stored });
+    if (storedUserData && storedUserRole && storedUserPermission) {
+      set({ user: storedUserData, roles: storedUserRole, permissions: storedUserPermission });
       get().startIdleTimer();
       get().startRefreshLoop();
-      return stored;
+      return { storedUserData, storedUserRole, storedUserPermission };
     }
     return null;
+  },
+
+  hasRole: async (role) => {
+    get().roles.includes(role);
+  },
+
+  hasPermission: async (permission) => {
+    get().permissions.some((p) => p.trim() === permission.trim());
   },
 
   logOut: async () => {

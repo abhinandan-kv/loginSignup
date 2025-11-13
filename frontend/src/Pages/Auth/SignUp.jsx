@@ -25,26 +25,29 @@ const SignUp = () => {
       name: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Name is required"),
       email: Yup.string().email("Invalid email address").required("Email is required"),
       password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
+      confirmPassword: Yup.string().min(6, "Password must be at least 6 characters").required("Confirm Password is required").oneOf([Yup.ref('password'), null], "Passwords must match"),
     }),
     onSubmit: async (values, { setSubmitting }) => {
       try {
         console.log("values- ", values);
-        const res = await axiosInstance.post("/user/signup", values);
-        console.log(res);
-        if (res.status === 201) {
-          toast(res.data.message);
-          setEmailForOtp(values.email);
-          setShowOtpModal(true);
-        }
-        if (res.status === 200) {
-          console.log(res.data.message);
-          toast(res.data.message);
-        }
+          const res = await axiosInstance.post("/user/signup", values);
+          console.log(res);
+          if (res.status === 201) {
+            toast(res.data.message);
+            setEmailForOtp(values.email);
+            setShowOtpModal(true);
+          }
+          if (res.status === 200) {
+            console.log(res.data.message);
+            toast(res.data.message);
+          }
+        
       } catch (error) {
         console.error("Signup failed:", error);
         toast("Signup failed. Please try again.");
@@ -118,6 +121,25 @@ const SignUp = () => {
                   {...formik.getFieldProps("password")}
                 />
                 {formik.touched.password && formik.errors.password ? <p className="text-red-500 text-sm mt-1">{formik.errors.password}</p> : null}
+              </div>
+
+              <div>
+                <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-neutral-300">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  name="confirm-password"
+                  id="confirm-password"
+                  className={`bg-neutral-50 dark:bg-neutral-700 border ${
+                    formik.touched.confirmPassword && formik.errors.confirmPassword ? "border-red-500" : "border-neutral-300 dark:border-neutral-600"
+                  } text-neutral-900 dark:text-neutral-50 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                  placeholder="••••••••"
+                  {...formik.getFieldProps("confirmPassword")}
+                />
+                {formik.touched.confirmPassword && formik.errors.confirmPassword ? (
+                  <p className="text-red-500 text-sm mt-1">{formik.errors.confirmPassword}</p>
+                ) : null}
               </div>
 
               <div className="flex items-center justify-end">

@@ -1,9 +1,15 @@
 import { OtpGen } from "../utils/otpGenerator.js";
 import { STATUS_CODES } from "../utils/statusCodes.js";
-import { IpTable, otpTable, UserTable } from "../models/index.js";
+import { IpTable, otpTable, permissionModel, roleModel, UserTable } from "../models/index.js";
 import sendOtpEmailEthereal from "../utils/sendOtpMail.js";
 import bcrypt, { compare } from "bcrypt";
-import { findOneUserInUserTable, findOneUserInUserTableWithSafeColumns, findOneUserToken } from "../services/user.services.js";
+import {
+  findOneUserInUserTable,
+  findOneUserInUserTableWithSafeColumns,
+  findOneUserToken,
+  findOneUserWithRolesPermissionsbyId,
+  getUserRolesAndPermissions,
+} from "../services/user.services.js";
 import { logUserLogin } from "../utils/getIp.js";
 import jwt from "jsonwebtoken";
 import sendOtpEmailGmailOAuth from "../utils/outhOtpMail.js";
@@ -28,7 +34,7 @@ export async function testController(req, res) {
 
 export async function signUp(req, res) {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role = "user" } = req.body; // this is just for role dev purpose, can be extendeble to create new users with roles
 
     if (!email || !password) {
       return res.status(200).json({ message: "Email and password are required" });
@@ -47,6 +53,20 @@ export async function signUp(req, res) {
     const encryptedEmail = await encryptDeterministic(email);
     console.log("Encrpyted data- ", { encryptedEmail, encryptedName });
     const newUser = await UserTable.create({ name: encryptedName, email: encryptedEmail, password: hashedPassword });
+    console.log("😀😀😀😀😀😀", Object.keys(newUser.__proto__));
+
+    //get the admin role from db
+    const adminRole = await roleModel.findOne({ where: { name: "admin" } });
+    console.log("😀😀😀😀😀😀", Object.keys(adminRole.__proto__));
+
+    //add role to the user from role
+    await newUser.addRole(adminRole);
+    //find all permissions available
+    const allPerms = await permissionModel.findAll();
+    console.log("😀😀😀😀😀😀", Object.keys(allPerms.__proto__));
+
+    //add permission to the role
+    await adminRole.addPermission(allPerms);
 
     // const otpCode = Math.floor(100000 + Math.random() * 900000);
     const otpCode = await OtpGen();
@@ -198,7 +218,7 @@ export async function verifyOtp(req, res) {
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
-
+    console.log({ email, password });
     if (!email || !password) {
       return res.status(200).json({ message: "Email and password are required" });
     }
@@ -298,23 +318,48 @@ export async function getUserData(req, res) {
 
     const encryptEmail = await encryptDeterministic(email);
     const userRes = await findOneUserInUserTableWithSafeColumns(encryptEmail);
-    console.log(userRes);
+    // console.log(userRes);
     // const userToken = await findOneUserToken(user.dataValues.id);
     // console.log(userToken);
-    if (!userRes) return res.status(400).json({ message: "Invalid email." });
+    // if (!userRes) return res.status(400).json({ message: "Invalid email." });
 
     // const responseLoad = { user: user, token: userToken };
-    const decryptedName = await decryptDeterministic(userRes.dataValues.name);
-    const decryptedEmail = await decryptDeterministic(userRes.dataValues.email);
+    // const decryptedName = await decryptDeterministic(userRes.dataValues.name);
+    // const decryptedEmail = await decryptDeterministic(userRes.dataValues.email);
 
-    const user = {
-      name: decryptedName,
-      email: decryptedEmail,
-      id: userRes.dataValues.id,
-      verified: userRes.dataValues.verified,
-    };
+    const userId = userRes.dataValues.id;
+    const { user, roles, permissions } = await getUserRolesAndPermissions(userId);
+    console.log("userRolePermission ->", user, roles, permissions);
 
-    return res.status(200).json({ message: "User Data retrived Sucessfully", user });
+    // const user = {
+    //   name: decryptedName,
+    //   email: decryptedEmail,
+    //   id: userRes.dataValues.id,
+    //   verified: userRes.dataValues.verified,
+    //   // role: userRes.dataValues.
+    // };
+
+    return res.status(200).json({ message: "User Data retrived Sucessfully", user, roles, permissions });
+    //Response of the above code:-
+    //     {
+    //     "message": "User Data retrived Sucessfully",
+    //     "user": {
+    //         "id": 65,
+    //         "name": "kededor",
+    //         "email": "kededor599@agenra.com",
+    //         "verified": true
+    //     },
+    //     "roles": [
+    //         "admin"
+    //     ],
+    //     "permissions": [
+    //         "view",
+    //         "edit\r\n",
+    //         "delete",
+    //         "create",
+    //         "assign_to"
+    //     ]
+    // }
   } catch (err) {
     console.error("Error verifying OTP:", err);
     return res.status(500).json({ message: "Internal server error." });
@@ -356,7 +401,7 @@ export async function getFirstRefreshTokenAfterSignin(req, res) {
     const existingToken = await RefreshToken.findOne({
       where: {
         userId: id,
-        expiresAt: { [Op.gt]: new Date() }, 
+        expiresAt: { [Op.gt]: new Date() },
       },
       order: [["createdAt", "DESC"]],
     });
@@ -486,6 +531,15 @@ export async function resetPassword(req, res) {
 export async function getTotalUserCount(req, res) {
   try {
     res.status(200).send({ message: "Current User Count Data Retrived" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function adminDashboard(req, res) {
+  try {
+    res.status(200).send({ message: "Admin Dashboard Data recieved." });
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: "Internal server error" });

@@ -154,6 +154,8 @@ export default function SignIn() {
         const res = await axiosInstance.post("/user/userdata", { email });
         console.log(res);
         const user = res.data.user;
+        const roles = res.data.roles;
+        const permissions = res.data.permissions;
 
         const tokenRes = await axiosInstance.post("/user/token", {
           id: user.id,
@@ -170,8 +172,10 @@ export default function SignIn() {
         await setEncryptedItem("accessToken", accessToken, remember);
         await setEncryptedItem("refreshToken", refreshToken, remember);
         await setEncryptedItem("userdata", user, remember);
+        await setEncryptedItem("role", roles, remember);
+        await setEncryptedItem("permission", permissions, remember);
 
-        useUserStore.getState().setUser(user, remember);
+        useUserStore.getState().setUser(user, roles, permissions, remember);
 
         navigate({ to: "/dashboard", replace: true });
       } else {
