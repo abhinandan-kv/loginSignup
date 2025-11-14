@@ -49,11 +49,18 @@ export const useUserStore = create((set, get) => ({
     get().roles.includes(role);
   },
 
-  hasPermission: async (permission) => {
-    get().permissions.some((p) => p.trim() === permission.trim());
+  hasPermission: (permission) => {
+    // console.log("USER STORE permission->", permission);
+    const perms = get().permissions || [];
+    if (!permission || typeof permission !== "string") return false;
+
+    return perms.some((p) => {
+      if (!p || typeof p !== "string") return false;
+      return p.trim() === permission.trim();
+    });
   },
 
-  logOut: async () => {
+  logout: async () => {
     set({ user: null });
     try {
       const refreshToken = await getDecryptedItem("refreshToken");

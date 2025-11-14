@@ -53,20 +53,20 @@ export async function signUp(req, res) {
     const encryptedEmail = await encryptDeterministic(email);
     console.log("Encrpyted data- ", { encryptedEmail, encryptedName });
     const newUser = await UserTable.create({ name: encryptedName, email: encryptedEmail, password: hashedPassword });
-    console.log("😀😀😀😀😀😀", Object.keys(newUser.__proto__));
+    console.log("😀", Object.keys(newUser.__proto__));
 
     //get the admin role from db
-    const adminRole = await roleModel.findOne({ where: { name: "admin" } });
-    console.log("😀😀😀😀😀😀", Object.keys(adminRole.__proto__));
+    const userRole = await roleModel.findOne({ where: { name: role } });
+    console.log("😀😀", Object.keys(userRole.__proto__));
 
     //add role to the user from role
-    await newUser.addRole(adminRole);
+    await newUser.addRole(userRole);
     //find all permissions available
     const allPerms = await permissionModel.findAll();
-    console.log("😀😀😀😀😀😀", Object.keys(allPerms.__proto__));
+    console.log("😀😀😀", Object.keys(allPerms.__proto__));
 
     //add permission to the role
-    await adminRole.addPermission(allPerms);
+    await userRole.addPermission(allPerms);
 
     // const otpCode = Math.floor(100000 + Math.random() * 900000);
     const otpCode = await OtpGen();

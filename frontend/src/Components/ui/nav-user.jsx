@@ -21,8 +21,8 @@ import { ThemeToggle } from "../ThemeToggle";
 export function NavUser({ user, handleAccountClick }) {
   // console.log(user, handleAccountClick);
   const { isMobile } = useSidebar();
-  const logOut = useUserStore((state) => state.logOut);
-  // console.log(logOut);
+  const logout = useUserStore((state) => state.logout);
+  // console.log(logout);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export function NavUser({ user, handleAccountClick }) {
   async function handleLogOut(e) {
     try {
       setLoading(true);
-      await logOut();
+      await logout();
       navigate({ to: "/signin", replace: true });
     } catch (err) {
       console.error("Logout failed:", err);

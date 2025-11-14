@@ -8,6 +8,8 @@ import AdminSection from "./Sections/AdminSection";
 import SharedWidgets from "./Sections/SharedWidgets";
 import EditorSection from "./Sections/EditorSection";
 import ViewerSection from "./Sections/ViewerSection";
+import { PermissionGate } from "./components/PermissionGate";
+import { Button } from "@/Components/ui/button";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -29,19 +31,19 @@ const Dashboard = () => {
       await loadUser();
       setLoading(false);
     })();
-  }, [user]);
+  }, []);
 
   const sectionsMap = {
     admin: <AdminSection />,
-    editor: <EditorSection />,
-    viewer: <ViewerSection />,
+    manager: <EditorSection />,
+    user: <ViewerSection />,
   };
 
   // const isAdmin = roles.includes("admin");
   // const isEditor = roles.includes("editor");
   // const isViewer = roles.includes("viewer");
 
-  if (loading) {
+  if (loading || !user) {
     return <div>Loading...</div>;
   }
 
@@ -58,6 +60,12 @@ const Dashboard = () => {
         <SharedWidgets />
 
         {roles.map((role) => sectionsMap[role] || <NoPermission />)}
+        {/* this gate can be used to render specific part of the crud ops components */}
+        <PermissionGate permission={"create"}>
+          <Button variant="outline" className={"cursor-pointer"}>
+            PermissionGate Button
+          </Button>
+        </PermissionGate>
       </div>
     </NormalLayout>
   );
@@ -65,8 +73,10 @@ const Dashboard = () => {
 
 export default Dashboard;
 
-const NoPermission = (
-  <div>
-    <p>No PERMISSIONS! HOW COME?</p>
-  </div>
-);
+const NoPermission = () => {
+  return (
+    <div>
+      <p>No PERMISSIONS! HOW COME?</p>
+    </div>
+  );
+};

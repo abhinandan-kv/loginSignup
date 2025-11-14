@@ -57,7 +57,7 @@ export async function getUserRolesAndPermissions(id) {
 
     const user = { id: userEnc.dataValues.id, name: decryptedName, email: decryptedEmail, verified: userEnc.dataValues.verified };
 
-    const permissions = [...new Set(rolePerms.flatMap((role) => role.permissions.map((perm) => perm.name)))];
+    const permissions = [...new Set(rolePerms.flatMap((role) => role.permissions.map((perm) => perm.name.trim())))];
 
     return {
       user,

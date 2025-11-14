@@ -38,10 +38,8 @@ export default function SignIn() {
           toast(res.data.message);
         }
         if (res.status === 201) {
-          setOtpModalOpen(true);
-          console.log(res.data.message);
           toast(res.data.message);
-          const getOtp = await axiosInstance.post("/user/localotp", { email });
+          const getOtp = await axiosInstance.post("/user/localotp", values);
           toast(getOtp.data.message);
           console.log(getOtp);
           const otp = getOtp.data.otpDetails.otpCode;
@@ -52,6 +50,8 @@ export default function SignIn() {
           const expiresAt = getOtp.data.otpDetails.expiresAt;
           // console.log(expiresAt);
           localStorage.setItem("otpData", JSON.stringify({ otp: otpEncrypted, expiresAt }));
+          setOtpModalOpen(true);
+          console.log(res.data.message);
         }
       } catch (err) {
         console.error(" Login failed:", err);
