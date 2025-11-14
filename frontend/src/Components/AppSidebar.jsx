@@ -15,12 +15,13 @@ import { NavUser } from "./ui/nav-user";
 import { useUserStore } from "@/Store/useUserStore";
 import avatar from "../assets/124599.jpg";
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 
 export function AppSidebar() {
   const user = useUserStore((state) => state.user);
   console.log("User", user);
 
-  const [ open, setOpen ] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const data = {
     user: {
@@ -31,8 +32,8 @@ export function AppSidebar() {
   };
   const items = [
     {
-      title: "Home",
-      url: "#",
+      title: "Dashboard",
+      url: "",
       icon: Home,
     },
     {
@@ -73,10 +74,10 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

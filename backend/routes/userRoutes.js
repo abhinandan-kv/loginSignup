@@ -4,6 +4,7 @@ import {
   forgotPassword,
   getFirstRefreshTokenAfterSignin,
   getTotalUserCount,
+  getTotalUserCountPerMonth,
   getUserData,
   login,
   logOut,
@@ -37,7 +38,8 @@ userRouter.post("/token", getFirstRefreshTokenAfterSignin);
 userRouter.post("/forgot-password", forgotPassword);
 userRouter.get("/forgot-password/verify", verifyResetToken);
 userRouter.post("/forgot-password/reset-password", resetPassword);
-userRouter.post("/usercount", verifyAccessToken, getTotalUserCount);
+userRouter.post("/usercount", getTotalUserCount); //add middleware later- bugs
+userRouter.post("/monthly/count", getTotalUserCountPerMonth);
 
 userRouter.post("/admindashboard", verifyAccessToken, verifyRole(["admin"]), verifyPermission(["view_dashboard"]), adminDashboard);
 

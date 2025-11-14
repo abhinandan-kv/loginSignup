@@ -4,11 +4,14 @@ import { IpTable, otpTable, permissionModel, roleModel, UserTable } from "../mod
 import sendOtpEmailEthereal from "../utils/sendOtpMail.js";
 import bcrypt, { compare } from "bcrypt";
 import {
+  countAllUser,
+  countUserMonthly,
   findOneUserInUserTable,
   findOneUserInUserTableWithSafeColumns,
   findOneUserToken,
   findOneUserWithRolesPermissionsbyId,
   getUserRolesAndPermissions,
+  listAllUserList,
 } from "../services/user.services.js";
 import { logUserLogin } from "../utils/getIp.js";
 import jwt from "jsonwebtoken";
@@ -19,6 +22,7 @@ import sendResetLinkEmail from "../utils/oauthResetMail.js";
 import { configDotenv } from "dotenv";
 import { decrypt, decryptDeterministic, encrypt, encryptDeterministic } from "../utils/cryptoUtils.js";
 import { Op } from "sequelize";
+import { getMonthlyChange } from "../utils/getMonthlyChange.js";
 configDotenv();
 
 const SALT_ROUNDS = 10;
@@ -34,6 +38,7 @@ export async function testController(req, res) {
 
 export async function signUp(req, res) {
   try {
+    // admin | manager | user
     const { name, email, password, role = "user" } = req.body; // this is just for role dev purpose, can be extendeble to create new users with roles
 
     if (!email || !password) {
@@ -107,6 +112,8 @@ export async function sendOtp(encryptedEmail, res = null) {
     // const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const otpCode = await OtpGen();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins validity
+    //otp just for development purposes
+    console.log("OTP CODE-> ", otpCode);
 
     //fix later
     const otpHashed = await bcrypt.hash(otpCode, SALT_ROUNDS);
@@ -530,7 +537,10 @@ export async function resetPassword(req, res) {
 
 export async function getTotalUserCount(req, res) {
   try {
-    res.status(200).send({ message: "Current User Count Data Retrived" });
+    const { verified } = req?.body;
+    const userCount = await countAllUser(verified);
+    console.log("userCount ->", userCount);
+    res.status(200).send({ message: "Current User Count Data Retrived", userCount });
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: "Internal server error" });
@@ -543,5 +553,19 @@ export async function adminDashboard(req, res) {
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: "Internal server error" });
+  }
+}
+
+export async function getTotalUserCountPerMonth(req, res) {
+  try {
+    const { verified } = req?.body;
+    const queryRes = await countUserMonthly(verified);
+    // console.log(queryRes)
+    const monthlyChange = await getMonthlyChange(queryRes);
+
+    res.status(200).send({ message: "User Count PerMonth Found!", userMonth: queryRes, userCount: monthlyChange });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Internal Server Error" });
   }
 }
