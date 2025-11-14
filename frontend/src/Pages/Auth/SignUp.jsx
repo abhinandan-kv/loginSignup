@@ -31,23 +31,25 @@ const SignUp = () => {
       name: Yup.string().required("Name is required"),
       email: Yup.string().email("Invalid email address").required("Email is required"),
       password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
-      confirmPassword: Yup.string().min(6, "Password must be at least 6 characters").required("Confirm Password is required").oneOf([Yup.ref('password'), null], "Passwords must match"),
+      confirmPassword: Yup.string()
+        .min(6, "Password must be at least 6 characters")
+        .required("Confirm Password is required")
+        .oneOf([Yup.ref("password"), null], "Passwords must match"),
     }),
     onSubmit: async (values, { setSubmitting }) => {
       try {
         console.log("values- ", values);
-          const res = await axiosInstance.post("/user/signup", values);
-          console.log(res);
-          if (res.status === 201) {
-            toast(res.data.message);
-            setEmailForOtp(values.email);
-            setShowOtpModal(true);
-          }
-          if (res.status === 200) {
-            console.log(res.data.message);
-            toast(res.data.message);
-          }
-        
+        const res = await axiosInstance.post("/user/signup", values);
+        console.log(res);
+        if (res.status === 201) {
+          toast(res.data.message);
+          setEmailForOtp(values.email);
+          setShowOtpModal(true);
+        }
+        if (res.status === 200) {
+          console.log(res.data.message);
+          toast(res.data.message);
+        }
       } catch (error) {
         console.error("Signup failed:", error);
         toast("Signup failed. Please try again.");
@@ -158,7 +160,7 @@ const SignUp = () => {
               <button
                 type="submit"
                 disabled={formik.isSubmitting}
-                className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition duration-150"
+                className="w-full text-white bg-neutral-800 hover:bg-neutral-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition duration-150"
               >
                 {formik.isSubmitting ? "Signing up..." : "Sign up"}
               </button>

@@ -4,8 +4,9 @@ import * as Yup from "yup";
 import { Link, useNavigate } from "@tanstack/react-router";
 import axiosInstance from "../../utils/AxiosApi/AxiosInstance";
 import { toast } from "sonner";
-import { decryptData, encryptData, setEncryptedItem } from "../../utils/Encryption/EncryptDecrypt";
+import { decryptData, encryptData, removeEncryptedItem, setEncryptedItem } from "../../utils/Encryption/EncryptDecrypt";
 import { useUserStore } from "@/Store/useUserStore";
+import { Eye, EyeClosed } from "lucide-react";
 
 const LogoIcon = () => (
   <svg className="w-8 h-8 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -19,6 +20,7 @@ export default function SignIn() {
   const [otp, setOtp] = useState("");
   const [email, setEmail] = useState(undefined);
   const [remember, setRemember] = useState(false);
+  const [viewPassword, setViewPassword] = useState(false);
 
   const validationSchema = Yup.object({
     email: Yup.string().email("Invalid email").required("Email is required"),
@@ -177,6 +179,7 @@ export default function SignIn() {
 
         useUserStore.getState().setUser(user, roles, permissions, remember);
 
+        await removeEncryptedItem("otpData");
         navigate({ to: "/dashboard", replace: true });
       } else {
         toast("Wrong or expired OTP");
@@ -225,29 +228,42 @@ export default function SignIn() {
                 <label htmlFor="password" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-neutral-300">
                   Password
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.password}
-                  className={`bg-neutral-50 dark:bg-neutral-700 border ${
-                    formik.touched.password && formik.errors.password ? "border-red-500" : "border-neutral-300"
-                  } text-neutral-900 dark:text-neutral-50 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    type={viewPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.password}
+                    className={`bg-neutral-50 dark:bg-neutral-700 border ${
+                      formik.touched.password && formik.errors.password ? "border-red-500" : "border-neutral-300"
+                    } text-neutral-900 dark:text-neutral-50 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                    placeholder={viewPassword ? "shh! dont see password" : "••••••••"}
+                  />
+                  {viewPassword ? (
+                    <Eye
+                      className={`${!otpModalOpen ? "absolute" : "hidden"} right-4 top-3.5 h-5 z-10 cursor-pointer text-muted-foreground`}
+                      onMouseDown={() => setViewPassword(!viewPassword)}
+                    />
+                  ) : (
+                    <EyeClosed
+                      className={`${!otpModalOpen ? "absolute" : "hidden"} right-4 top-3.5 h-5 z-10 cursor-pointer text-muted-foreground`}
+                      onClick={() => setViewPassword(!viewPassword)}
+                    />
+                  )}
+                </div>
                 {formik.touched.password && formik.errors.password && <p className="text-red-500 text-sm mt-1">{formik.errors.password}</p>}
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-start">
+                <div className="flex items-center">
                   <input
                     id="remember"
                     type="checkbox"
                     checked={remember}
-                    onChange={(e) => setRemember(e.target.value)}
-                    className="w-4 h-4 border border-neutral-300 dark:border-neutral-700 rounded bg-neutral-50 dark:bg-neutral-700 focus:ring-3 focus:ring-blue-300"
+                    onChange={(e) => setRemember(!remember)}
+                    className="w-4 h-4 border border-neutral-300 accent-accent-foreground dark:border-neutral-700 rounded bg-neutral-50 dark:bg-neutral-700  "
                   />
                   <label htmlFor="remember" className="ml-2 text-sm text-neutral-500 dark:text-neutral-300">
                     Remember me
