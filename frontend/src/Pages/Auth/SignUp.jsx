@@ -5,11 +5,14 @@ import * as Yup from "yup";
 import axiosInstance from "../../utils/AxiosApi/AxiosInstance";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { Eye, EyeClosed } from "lucide-react";
 
 const SignUp = () => {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [emailForOtp, setEmailForOtp] = useState("");
   const [otp, setOtp] = useState(undefined);
+  const [viewPassword, setViewPassword] = useState(false);
+  const [viewPasswordConfirm, setViewPasswordConfirm] = useState(false);
 
   const navigate = useNavigate();
 
@@ -76,7 +79,7 @@ const SignUp = () => {
             <form className="space-y-4 md:space-y-6" onSubmit={formik.handleSubmit}>
               <div>
                 <label htmlFor="name" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-neutral-300">
-                  Your Name
+                  Name
                 </label>
                 <input
                   type="text"
@@ -93,7 +96,7 @@ const SignUp = () => {
 
               <div>
                 <label htmlFor="email" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-neutral-300">
-                  Your email
+                  Email
                 </label>
                 <input
                   type="email"
@@ -112,33 +115,61 @@ const SignUp = () => {
                 <label htmlFor="password" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-neutral-300">
                   Password
                 </label>
-                <input
-                  type="password"
-                  name="password"
-                  id="password"
-                  className={`bg-neutral-50 dark:bg-neutral-700 border ${
-                    formik.touched.password && formik.errors.password ? "border-red-500" : "border-neutral-300 dark:border-neutral-600"
-                  } text-neutral-900 dark:text-neutral-50 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
-                  placeholder="••••••••"
-                  {...formik.getFieldProps("password")}
-                />
+                <div className="relative">
+                  <input
+                    type={viewPassword ? "text" : "password"}
+                    name="password"
+                    id="password"
+                    className={`bg-neutral-50 dark:bg-neutral-700 border ${
+                      formik.touched.password && formik.errors.password ? "border-red-500" : "border-neutral-300 dark:border-neutral-600"
+                    } text-neutral-900 dark:text-neutral-50 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                    placeholder="••••••••"
+                    {...formik.getFieldProps("password")}
+                  />
+                  {viewPassword ? (
+                    <Eye
+                      className={`${!showOtpModal ? "absolute" : "hidden"} right-4 top-3.5 h-5 z-10 cursor-pointer text-muted-foreground`}
+                      onMouseDown={() => setViewPassword(!viewPassword)}
+                    />
+                  ) : (
+                    <EyeClosed
+                      className={`${!showOtpModal ? "absolute" : "hidden"} right-4 top-3.5 h-5 z-10 cursor-pointer text-muted-foreground`}
+                      onClick={() => setViewPassword(!viewPassword)}
+                    />
+                  )}
+                </div>
                 {formik.touched.password && formik.errors.password ? <p className="text-red-500 text-sm mt-1">{formik.errors.password}</p> : null}
               </div>
 
               <div>
                 <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-neutral-300">
-                  Password
+                  Confirm Password
                 </label>
-                <input
-                  type="password"
-                  name="confirm-password"
-                  id="confirm-password"
-                  className={`bg-neutral-50 dark:bg-neutral-700 border ${
-                    formik.touched.confirmPassword && formik.errors.confirmPassword ? "border-red-500" : "border-neutral-300 dark:border-neutral-600"
-                  } text-neutral-900 dark:text-neutral-50 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
-                  placeholder="••••••••"
-                  {...formik.getFieldProps("confirmPassword")}
-                />
+                <div className="relative">
+                  <input
+                    type={viewPasswordConfirm ? "text" : "password"}
+                    name="confirm-password"
+                    id="confirm-password"
+                    className={`bg-neutral-50 dark:bg-neutral-700 border ${
+                      formik.touched.confirmPassword && formik.errors.confirmPassword
+                        ? "border-red-500"
+                        : "border-neutral-300 dark:border-neutral-600"
+                    } text-neutral-900 dark:text-neutral-50 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                    placeholder="••••••••"
+                    {...formik.getFieldProps("confirmPassword")}
+                  />
+                  {viewPasswordConfirm ? (
+                    <Eye
+                      className={`${!showOtpModal ? "absolute" : "hidden"} right-4 top-3.5 h-5 z-10 cursor-pointer text-muted-foreground`}
+                      onMouseDown={() => setViewPasswordConfirm(!viewPasswordConfirm)}
+                    />
+                  ) : (
+                    <EyeClosed
+                      className={`${!showOtpModal ? "absolute" : "hidden"} right-4 top-3.5 h-5 z-10 cursor-pointer text-muted-foreground`}
+                      onClick={() => setViewPasswordConfirm(!viewPasswordConfirm)}
+                    />
+                  )}
+                </div>
                 {formik.touched.confirmPassword && formik.errors.confirmPassword ? (
                   <p className="text-red-500 text-sm mt-1">{formik.errors.confirmPassword}</p>
                 ) : null}
@@ -160,7 +191,7 @@ const SignUp = () => {
               <button
                 type="submit"
                 disabled={formik.isSubmitting}
-                className="w-full text-white bg-neutral-800 hover:bg-neutral-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition duration-150"
+                className="w-full text-white bg-neutral-800 hover:bg-neutral-700 dark:bg-neutral-700 dark:hover:bg-neutral-900 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition duration-150"
               >
                 {formik.isSubmitting ? "Signing up..." : "Sign up"}
               </button>
